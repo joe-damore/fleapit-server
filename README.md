@@ -1,2 +1,2 @@
-# fleapit-server
+# Fleapit Server
 Fleapit server app
