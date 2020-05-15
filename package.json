@@ -1,0 +1,10 @@
+{
+  "name": "fleapit-server",
+  "version": "0.1.0",
+  "description": "Fleapit server app",
+  "main": "index.js",
+  "repository": "git@github.com:joe-damore/fleapit-server.git",
+  "author": "Joe D'Amore <joe@joedamore.me>",
+  "license": "MIT",
+  "private": false
+}
