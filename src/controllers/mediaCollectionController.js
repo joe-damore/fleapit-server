@@ -1,6 +1,8 @@
+// Models
 const MediaCollection = require('../models/mediaCollection.js');
 const MediaObject = require('../models/mediaObject.js');
 
+// Utilities
 const errorCodes = require('../util/errorCodes.js');
 const responses = require('../util/responses.js');
 
@@ -10,11 +12,17 @@ const responses = require('../util/responses.js');
 const errs = {
   ...errorCodes,
 
+  /**
+   * When a media collection is referred to using an invalid ID.
+   */
   INVALID_MEDIA_COLLECTION_ID: {
     code: `INVALID_MEDIA_COLLECTION_ID`,
     message: (req) => `ID '${req.params.id}' is non-numeric or otherwise invalid`,
   },
 
+  /**
+   * When a media collection is referred to using an ID that does not exist.
+   */
   MEDIA_COLLECTION_NOT_FOUND: {
     code: `MEDIA_COLLECTION_NOT_FOUND`,
     message: (req) => `Media collection with ID '${req.params.id}' does not exist`,
@@ -25,6 +33,10 @@ const errs = {
  * Returns an instance of MediaCollection with the given ID.
  *
  * If no record exists with the given ID, null is returned instead.
+ *
+ * @param {number} id - ID of media collection to find.
+ *
+ * @returns {Object|null} Media collection object or null.
  */
 const findById = async (id) => {
   return MediaCollection.findOne({
@@ -35,7 +47,7 @@ const findById = async (id) => {
 };
 
 /**
- *
+ * Media collection controller.
  */
 const mediaCollectionController = {
   /**
