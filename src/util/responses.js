@@ -8,6 +8,11 @@ module.exports = {
    *
    * The error property contains an error-specific code and a human readable
    * message.
+   *
+   * @param {Object} req - Express request object.
+   * @param {Object} req - Object describing error code and message.
+   *
+   * @return {Object} Object describing error to be sent in response.
    */
   error: (req, errorObject) => {
     const errorMessage = (() => {
@@ -35,6 +40,12 @@ module.exports = {
 
   /**
    * Returns an object containing a generic string message.
+   *
+   * If no message is specified, 'OK' is used.
+   *
+   * @param {string|undefined} message - Optional message to display.
+   *
+   * @returns {Object} Object containing message to be sent in response.
    */
   message: (message) => {
     const messageString = message ?? 'OK';
@@ -43,6 +54,8 @@ module.exports = {
 
   /**
    * Returns an object containing a generic string message 'OK'.
+   *
+   * @returns {Object} Object containing message describing OK status.
    */
   ok: () => {
     return { message: 'OK' };

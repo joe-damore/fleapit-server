@@ -2,7 +2,10 @@
  * @file Enum-like structure of application-wide error codes.
  */
 
-module.exports = {
+/**
+ * Enum-like structure of error codes that could occur application-wide.
+ */
+const errorCodes = {
   /**
    * Code for generic server error.
    *
@@ -15,3 +18,5 @@ module.exports = {
     message: () => `An internal server error occurred`,
   },
 };
+
+module.exports = errorCodes;
