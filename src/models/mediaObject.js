@@ -1,6 +1,8 @@
 const Sequelize = require('sequelize');
 const mediaDb = require('../db/mediaDb.js');
 
+const MediaCollection = require('./mediaCollection.js');
+
 class MediaObject extends Sequelize.Model {};
 
 MediaObject.init({
@@ -20,6 +22,10 @@ MediaObject.init({
   collection: {
     type: Sequelize.INTEGER,
     allowNull: false,
+    references: {
+      model: MediaCollection,
+      key: 'id',
+    },
   }
 }, {
   sequelize: mediaDb,

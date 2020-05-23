@@ -11,6 +11,10 @@ MediaCollection.init({
   parentCollection: {
     type: Sequelize.INTEGER,
     allowNull: true,
+    references: {
+      model: MediaCollection,
+      key: 'id',
+    }
   },
 }, {
   sequelize: mediaDb,

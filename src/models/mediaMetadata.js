@@ -1,20 +1,28 @@
 const Sequelize = require('sequelize');
 const mediaDb = require('../db/mediaDb.js');
 
-class MediaMetadata extends Sequelize.Models {};
+const MediaObject = require('./mediaObject.js');
+
+class MediaMetadata extends Sequelize.Model {};
 
 MediaMetadata.init({
-  title: {
+  mediaObjectId: {
+    type: Sequelize.INTEGER,
+    allowNull: false,
+    unique: 'object-key-composite',
+    references: {
+      model: MediaObject,
+      key: 'id',
+    },
+  },
+  key: {
     type: Sequelize.STRING,
     allowNull: false,
+    unique: 'object-key-composite',
   },
-  sortTitle: {
+  value: {
     type: Sequelize.STRING,
-    allowNull: true,
-  },
-  description: {
-    type: Sequelize.STRING,
-    allowNull: true,
+    allowNull: false,
   },
 }, {
   sequelize: mediaDb,
