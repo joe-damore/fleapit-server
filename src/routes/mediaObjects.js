@@ -8,6 +8,8 @@ router.post('/', mediaObjectController.createMediaObject);
 
 router.get('/:id', mediaObjectController.findMediaObjectById);
 router.get('/:id/info', mediaObjectController.findMediaObjectInfoById);
-// router.get('/:id/metadata', mediaObjectController.findMediaObjectMetadataById);
+router.get('/:id/metadata', mediaObjectController.findMediaObjectMetadataById);
+router.patch('/:id/metadata', mediaObjectController.updateMediaObjectMetadata);
+router.put('/:id/metadata', mediaObjectController.replaceMediaObjectMetadata);
 
 module.exports = router;

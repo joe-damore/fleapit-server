@@ -1,4 +1,5 @@
 const MediaObject = require('../models/mediaObject.js');
+const MediaMetadata = require('../models/mediaMetadata.js');
 
 const errorCodes = require('../util/errorCodes.js');
 const responses = require('../util/responses.js');
@@ -77,6 +78,7 @@ const mediaObjectController = {
         .send(mediaObject);
     }
     catch (err) {
+      console.log(err);
       return res
         .status(500)
         .send(responses.error(req, errs.SERVER_ERROR));
@@ -144,6 +146,153 @@ const mediaObjectController = {
       return res
         .status(404)
         .send(responses.error(req, errs.MEDIA_OBJECT_NOT_FOUND));
+    }
+    catch (err) {
+      console.log(err);
+      return res
+        .status(500)
+        .send(responses.error(req, errs.SERVER_ERROR));
+    }
+  },
+
+  /**
+   *
+   */
+  findMediaObjectMetadataById: async (req, res) => {
+    const id = +req.params.id;
+
+    if (isNaN(id)) {
+      return res
+        .status(400)
+        .send(responses.error(req, errs.INVALID_MEDIA_OBJECT_ID));
+    }
+
+    try {
+      let mediaObject = await findById(id);
+      if (!mediaObject) {
+        return res
+          .status(404)
+          .send(responses.error(req, errs.MEDIA_OBJECT_NOT_FOUND));
+      }
+
+      let mediaObjectMetadata = await MediaMetadata.findAll({
+        where: {
+          mediaObjectId: id
+        },
+      });
+
+      return res
+        .send(mediaObjectMetadata.reduce((acc, cur) => {
+          const metadata = {};
+          metadata[cur.key] = cur.value;
+
+          return {
+            ...acc,
+            ...metadata
+          };
+        }, {}));
+    }
+    catch (err) {
+      console.log(err);
+      return res
+        .status(500)
+        .send(responses.error(req, errs.SERVER_ERROR));
+    }
+  },
+
+  /**
+   *
+   */
+  updateMediaObjectMetadata: async (req, res) => {
+    const id = +req.params.id;
+
+    if (isNaN(id)) {
+      return res
+        .status(400)
+        .send(responses.error(req, errs.INVALID_MEDIA_OBJECT_ID));
+    }
+
+    try {
+      let mediaObject = await findById(id);
+      if (!mediaObject) {
+        return res
+          .status(404)
+          .send(responses.error(req, errs.MEDIA_OBJECT_NOT_FOUND));
+      }
+
+      const metadataPromises = Object.keys(req.body).map((key) => {
+        const value = req.body[key];
+
+        if (value === null || value === undefined) {
+          // Remove metadata entry if value is null or undefined.
+          return MediaMetadata.destroy({
+            where: {
+              mediaObjectId: id,
+              key,
+            },
+          });
+        }
+        // Insert or update entry if value is specified.
+        return MediaMetadata.upsert({
+          mediaObjectId: id,
+          key,
+          value,
+        });
+      });
+
+      await Promise.all(metadataPromises);
+      return res.send(responses.ok());
+    }
+    catch (err) {
+      console.log(err);
+      return res
+        .status(500)
+        .send(responses.error(req, errs.SERVER_ERROR));
+    }
+  },
+
+  /**
+   *
+   */
+  replaceMediaObjectMetadata: async (req, res) => {
+    const id = +req.params.id;
+
+    if (isNaN(id)) {
+      return res
+        .status(400)
+        .send(responses.error(req, errs.INVALID_MEDIA_OBJECT_ID));
+    }
+
+    try {
+      let mediaObject = await findById(id);
+      if (!mediaObject) {
+        return res
+          .status(404)
+          .send(responses.error(req, errs.MEDIA_OBJECT_NOT_FOUND));
+      }
+
+      await MediaMetadata.destroy({
+        where: {
+          mediaObjectId: id,
+        }
+      });
+
+      const metadataPromises = Object.keys(req.body).map((key) => {
+        const value = req.body[key];
+
+        // Short-circuit if no value is provided.
+        if (value === null || value === undefined) {
+          return;
+        }
+        return MediaMetadata.create({
+          mediaObjectId: id,
+          key,
+          value
+        });
+      });
+
+      await Promise.all(metadataPromises);
+      return res.send(responses.ok());
     }
     catch (err) {
       console.log(err);
