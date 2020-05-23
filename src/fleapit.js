@@ -15,6 +15,8 @@ module.exports = async () => {
 
   // Routers
   const usersRouter = require('./routes/users.js');
+  const mediaCollectionsRouter = require('./routes/mediaCollections.js');
+  const mediaObjectsRouter = require('./routes/mediaObjects.js');
 
   // Sync database with models
   await Promise.all(dbs.map(async (db) => {
@@ -23,6 +25,8 @@ module.exports = async () => {
 
 
   app.use('/users', usersRouter);
+  app.use('/media-collections', mediaCollectionsRouter);
+  app.use('/media-objects', mediaObjectsRouter);
 
   app.listen(port, () => {
     console.log(`Listening at http://localhost:${port}`);
