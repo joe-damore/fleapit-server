@@ -5,7 +5,10 @@ const port = 3000;
 
 module.exports = async () => {
   // DBs
-  const mediaDb = require('./db/mediaDb.js');
+  const dbs = [
+    require('./db/mediaDb.js'),
+    require('./db/usersDb.js'),
+  ];
 
   // Models
   const models = require('./models');
@@ -13,7 +16,11 @@ module.exports = async () => {
   // Routers
   const usersRouter = require('./routes/users.js');
 
-  await mediaDb.sync();
+  // Sync database with models
+  await Promise.all(dbs.map(async (db) => {
+    return db.sync();
+  }));
+
 
   app.use('/users', usersRouter);
 
