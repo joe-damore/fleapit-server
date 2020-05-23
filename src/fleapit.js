@@ -23,6 +23,7 @@ module.exports = async () => {
     return db.sync();
   }));
 
+  app.use(express.json());
 
   app.use('/users', usersRouter);
   app.use('/media-collections', mediaCollectionsRouter);
