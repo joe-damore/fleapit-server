@@ -1,6 +1,8 @@
+// TODO Replace all mentions of "MediaCollection" with "Collection".
+
 // Models
-const MediaCollection = require('../models/mediaCollection.js');
-const MediaObject = require('../models/mediaObject.js');
+const Collection = require('../models/collection.js');
+const Media = require('../models/media.js');
 
 // Utilities
 const errorCodes = require('../util/errorCodes.js');
@@ -39,7 +41,7 @@ const errs = {
  * @returns {Object|null} Media collection object or null.
  */
 const findById = async (id) => {
-  return MediaCollection.findOne({
+  return Collection.findOne({
     where: {
       id,
     },
@@ -49,12 +51,12 @@ const findById = async (id) => {
 /**
  * Media collection controller.
  */
-const mediaCollectionController = {
+const collectionController = {
   /**
    * Returns an array containing all media collections.
    */
   index: async (req, res) => {
-    const mediaCollections = await MediaCollection.findAll();
+    const mediaCollections = await Collection.findAll();
     res.send(mediaCollections);
   },
 
@@ -62,7 +64,7 @@ const mediaCollectionController = {
    * Returns an array containing only top-level media collections.
    */
   indexTopLevel: async (req, res) => {
-    const mediaCollections = await MediaCollection.findAll({
+    const mediaCollections = await Collection.findAll({
       where: {
         parentCollection: null,
       },
@@ -73,9 +75,9 @@ const mediaCollectionController = {
   /**
    *
    */
-  createMediaCollection: async (req, res) => {
+  createCollection: async (req, res) => {
     try {
-      let mediaCollection = await MediaCollection.create({
+      let mediaCollection = await Collection.create({
         ...req.body,
       });
 
@@ -94,7 +96,7 @@ const mediaCollectionController = {
   /**
    * Returns the media collection with the given ID.
    */
-  findMediaCollectionById: async (req, res) => {
+  findCollectionById: async (req, res) => {
     const id = +req.params.id;
 
     if (isNaN(id)) {
@@ -123,7 +125,7 @@ const mediaCollectionController = {
   /**
    *
    */
-  findMediaCollectionItemsById: async (req, res) => {
+  findCollectionItemsById: async (req, res) => {
     const id = +req.params.id;
 
     if (isNaN(id)) {
@@ -173,4 +175,4 @@ const mediaCollectionController = {
 
 };
 
-module.exports = mediaCollectionController;
+module.exports = collectionController;

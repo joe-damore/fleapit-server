@@ -1,11 +1,11 @@
 const Sequelize = require('sequelize');
 const mediaDb = require('../db/mediaDb.js');
 
-const MediaCollection = require('./mediaCollection.js');
+const Collection = require('./collection.js');
 
-class MediaObject extends Sequelize.Model {};
+class Media extends Sequelize.Model {};
 
-MediaObject.init({
+Media.init({
   name: {
     type: Sequelize.STRING,
     allowNull: true,
@@ -23,13 +23,13 @@ MediaObject.init({
     type: Sequelize.INTEGER,
     allowNull: false,
     references: {
-      model: MediaCollection,
+      model: Collection,
       key: 'id',
     },
   }
 }, {
   sequelize: mediaDb,
-  modelName: 'mediaObject',
+  modelName: 'media',
 });
 
-module.exports = MediaObject;
+module.exports = Media;

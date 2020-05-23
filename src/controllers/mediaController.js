@@ -1,4 +1,6 @@
-const MediaObject = require('../models/mediaObject.js');
+// TODO Replace all mentions of 'MediaObjectController' with 'MediaController'
+
+const Media = require('../models/media.js');
 const MediaMetadata = require('../models/mediaMetadata.js');
 
 const errorCodes = require('../util/errorCodes.js');
@@ -28,7 +30,7 @@ const errs = {
  *
  */
 const findById = async (id) => {
-  return MediaObject.findOne({
+  return Media.findOne({
     where: {
       id,
     },
@@ -43,10 +45,10 @@ const findById = async (id) => {
  * returned instead. Finally, if that is not specified, the filename derived
  * from the mediaObject's URL is used.
  */
-const getMediaObjectName = async (mediaObject) => {
+const getMediaName = async (mediaObject) => {
   let metadata = await MediaMetadata.findOne({
     where: {
-      mediaObjectId: mediaObject.id,
+      mediaId: mediaObject.id,
       key: 'name',
     },
   });
@@ -64,22 +66,22 @@ const getMediaObjectName = async (mediaObject) => {
 /**
  *
  */
-const mediaObjectController = {
+const mediaController = {
 
   /**
    *
    */
   index: async (req, res) => {
-    const mediaObjects = await MediaObject.findAll();
+    const mediaObjects = await Media.findAll();
     res.send(mediaObjects);
   },
 
   /**
    *
    */
-  createMediaObject: async (req, res) => {
+  createMedia: async (req, res) => {
     try {
-      let mediaObject = await MediaObject.create({
+      let mediaObject = await Media.create({
         ...req.body,
       });
 
@@ -98,7 +100,7 @@ const mediaObjectController = {
   /**
    *
    */
-  findMediaObjectById: async (req, res) => {
+  findMedia: async (req, res) => {
     const id = +req.params.id;
 
     if (isNaN(id)) {
@@ -110,7 +112,7 @@ const mediaObjectController = {
     try {
       let mediaObject = await findById(id);
       if (mediaObject) {
-        const name = await getMediaObjectName(mediaObject);
+        const name = await getMediaName(mediaObject);
         return res.sendFile(path.resolve(mediaObject.url), {
           headers: {
             'Content-Disposition': `filename="${name}"`,
@@ -132,7 +134,7 @@ const mediaObjectController = {
   /**
    *
    */
-  findMediaObjectInfoById: async (req, res) => {
+  findMediaInfo: async (req, res) => {
     const id = +req.params.id;
 
     if (isNaN(id)) {
@@ -168,7 +170,7 @@ const mediaObjectController = {
   /**
    *
    */
-  findMediaObjectMetadataById: async (req, res) => {
+  findMediaMetadata: async (req, res) => {
     const id = +req.params.id;
 
     if (isNaN(id)) {
@@ -187,7 +189,7 @@ const mediaObjectController = {
 
       let mediaObjectMetadata = await MediaMetadata.findAll({
         where: {
-          mediaObjectId: id
+          mediaId: id
         },
       });
 
@@ -213,7 +215,7 @@ const mediaObjectController = {
   /**
    *
    */
-  updateMediaObjectMetadata: async (req, res) => {
+  updateMediaMetadata: async (req, res) => {
     const id = +req.params.id;
 
     if (isNaN(id)) {
@@ -237,14 +239,14 @@ const mediaObjectController = {
           // Remove metadata entry if value is null or undefined.
           return MediaMetadata.destroy({
             where: {
-              mediaObjectId: id,
+              mediaId: id,
               key,
             },
           });
         }
         // Insert or update entry if value is specified.
         return MediaMetadata.upsert({
-          mediaObjectId: id,
+          mediaId: id,
           key,
           value,
         });
@@ -264,7 +266,7 @@ const mediaObjectController = {
   /**
    *
    */
-  replaceMediaObjectMetadata: async (req, res) => {
+  replaceMediaMetadata: async (req, res) => {
     const id = +req.params.id;
 
     if (isNaN(id)) {
@@ -283,7 +285,7 @@ const mediaObjectController = {
 
       await MediaMetadata.destroy({
         where: {
-          mediaObjectId: id,
+          mediaId: id,
         }
       });
 
@@ -295,7 +297,7 @@ const mediaObjectController = {
           return;
         }
         return MediaMetadata.create({
-          mediaObjectId: id,
+          mediaId: id,
           key,
           value
         });
@@ -314,4 +316,4 @@ const mediaObjectController = {
 
 };
 
-module.exports = mediaObjectController;
+module.exports = mediaController;

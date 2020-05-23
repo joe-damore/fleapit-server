@@ -1,11 +1,11 @@
-const mediaCollection = require('./mediaCollection.js');
+const collection = require('./collection.js');
+const media = require('./media.js');
 const mediaMetadata = require('./mediaMetadata.js');
-const mediaObject = require('./mediaObject.js');
 const user = require('./user.js');
 
 module.exports = {
-  mediaCollection,
+  collection,
+  media,
   mediaMetadata,
-  mediaObject,
   user,
 };

@@ -1,0 +1,20 @@
+const express = require('express');
+const router = express.Router();
+
+const mediaController = require('../controllers/mediaController.js');
+
+router.get('/', mediaController.index);
+router.post('/', mediaController.createMedia);
+
+router.get('/:id', mediaController.findMediaInfo);
+router.get('/:id/view', mediaController.findMedia);
+// router.get('/:id/view', mediaController.viewMedia);
+// router.get('/:id/download', mediaController.downloadMedia);
+
+router.get('/:id/metadata', mediaController.findMediaMetadata);
+router.patch('/:id/metadata', mediaController.updateMediaMetadata);
+router.put('/:id/metadata', mediaController.replaceMediaMetadata);
+
+//router.get('/:id/artwork', mediaController.findMediaArtwork);
+
+module.exports = router;

@@ -3,30 +3,42 @@ const mediaDb = require('../db/mediaDb.js');
 
 const Media = require('./media.js');
 
-class MediaMetadata extends Sequelize.Model {};
+class MediaArtwork extends Sequelize.Model {};
 
-MediaMetadata.init({
+MediaArtwork.init({
   mediaId: {
     type: Sequelize.INTEGER,
     allowNull: false,
-    unique: 'object-key-composite',
     references: {
       model: Media,
       key: 'id',
     },
   },
-  key: {
+  format: {
     type: Sequelize.STRING,
     allowNull: false,
-    unique: 'object-key-composite',
   },
-  value: {
+  url: {
     type: Sequelize.STRING,
     allowNull: false,
+  },
+  tag: {
+    type: Sequelize.STRING,
+    allowNull: true,
   },
 }, {
+  indexes: [
+    {
+      unique: true,
+      fields: ['mediaId', 'format', 'url'],
+    },
+    {
+      unique: true,
+      fields: ['mediaId', 'format', 'tag'],
+    },
+  ],
   sequelize: mediaDb,
-  modelName: 'mediaMetadata',
+  modelName: 'mediaArtwork',
 });
 
-module.exports = MediaMetadata;
+module.exports = MediaArtwork;
