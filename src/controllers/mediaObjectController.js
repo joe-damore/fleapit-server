@@ -43,8 +43,18 @@ const findById = async (id) => {
  * returned instead. Finally, if that is not specified, the filename derived
  * from the mediaObject's URL is used.
  */
-const getMediaObjectName = (mediaObject) => {
-  // TODO Retrieve filename from metadata if available.
+const getMediaObjectName = async (mediaObject) => {
+  let metadata = await MediaMetadata.findOne({
+    where: {
+      mediaObjectId: mediaObject.id,
+      key: 'name',
+    },
+  });
+
+  if (metadata) {
+    return metadata.value;
+  }
+
   if (mediaObject.name) {
     return mediaObject.name;
   }
@@ -100,7 +110,7 @@ const mediaObjectController = {
     try {
       let mediaObject = await findById(id);
       if (mediaObject) {
-        const name = getMediaObjectName(mediaObject);
+        const name = await getMediaObjectName(mediaObject);
         return res.sendFile(path.resolve(mediaObject.url), {
           headers: {
             'Content-Disposition': `filename="${name}"`,
