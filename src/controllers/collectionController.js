@@ -17,16 +17,16 @@ const errs = {
   /**
    * When a media collection is referred to using an invalid ID.
    */
-  INVALID_MEDIA_COLLECTION_ID: {
-    code: `INVALID_MEDIA_COLLECTION_ID`,
+  INVALID_COLLECTION_ID: {
+    code: `INVALID_COLLECTION_ID`,
     message: (req) => `ID '${req.params.id}' is non-numeric or otherwise invalid`,
   },
 
   /**
    * When a media collection is referred to using an ID that does not exist.
    */
-  MEDIA_COLLECTION_NOT_FOUND: {
-    code: `MEDIA_COLLECTION_NOT_FOUND`,
+  COLLECTION_NOT_FOUND: {
+    code: `COLLECTION_NOT_FOUND`,
     message: (req) => `Media collection with ID '${req.params.id}' does not exist`,
   },
 };
@@ -102,7 +102,7 @@ const collectionController = {
     if (isNaN(id)) {
       return res
         .status(400)
-        .send(responses.error(req, errs.INVALID_MEDIA_COLLECTION_ID));
+        .send(responses.error(req, errs.INVALID_COLLECTION_ID));
     }
 
     try {
@@ -113,7 +113,7 @@ const collectionController = {
 
       return res
         .status(404)
-        .send(responses.error(req, errs.MEDIA_COLLECTION_NOT_FOUND));
+        .send(responses.error(req, errs.COLLECTION_NOT_FOUND));
     }
     catch (err) {
       return res
@@ -131,14 +131,14 @@ const collectionController = {
     if (isNaN(id)) {
       return res
         .status(400)
-        .send(responses.error(req, errs.INVALID_MEDIA_COLLECTION_ID));
+        .send(responses.error(req, errs.INVALID_COLLECTION_ID));
     }
 
     try {
       if (!await findById(id)) {
         return res
           .status(404)
-          .send(responses.error(req, errs.MEDIA_COLLECTION_NOT_FOUND));
+          .send(responses.error(req, errs.COLLECTION_NOT_FOUND));
       }
 
       const retrievals = await Promise.all([
