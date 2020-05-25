@@ -2,6 +2,7 @@
 
 const Media = require('../models/media.js');
 const MediaMetadata = require('../models/mediaMetadata.js');
+const MediaArtwork = require('../models/mediaArtwork.js');
 
 const errorCodes = require('../util/errorCodes.js');
 const responses = require('../util/responses.js');
@@ -308,6 +309,101 @@ const mediaController = {
     }
     catch (err) {
       console.log(err);
+      return res
+        .status(500)
+        .send(responses.error(req, errs.SERVER_ERROR));
+    }
+  },
+
+  /**
+   *
+   */
+  findMediaArtwork: async (req, res) => {
+    const id = +req.params.id;
+
+    if (isNaN(id)) {
+      return res
+        .status(400)
+        .send(responses.error(req, errs.INVALID_MEDIA_OBJECT_ID));
+    }
+
+    try {
+      let media = await findById(id);
+      if (!media) {
+        return res
+          .status(404)
+          .send(responses.error(req, errs.MEDIA_OBJECT_NOT_FOUND));
+      }
+
+      let mediaArtwork = await MediaArtwork.findAll({
+        where: {
+          mediaId: id,
+        },
+      });
+
+      return res
+        .send(mediaArtwork.map((mediaArtworkItem) => {
+          return scrub(mediaArtworkItem, 'url');
+        }));
+    }
+    catch (err) {
+      console.log(err);
+      return res
+        .status(500)
+        .send(responses.error(req, errs.SERVER_ERROR));
+    }
+  },
+
+  /**
+   *
+   */
+  createMediaArtwork: async (req, res) => {
+    const id = +req.params.id;
+
+    if (isNaN(id)) {
+      return res
+        .status(400)
+        .send(responses.error(req, errs.INVALID_MEDIA_OBJECT_ID));
+    }
+
+    try {
+      let media = await findById(id);
+      if (!media) {
+        return res
+          .status(404)
+          .send(responses.error(req, errs.MEDIA_OBJECT_NOT_FOUND));
+      }
+
+      const mediaArtwork = await MediaArtwork.create({
+        mediaId: id,
+        ...req.body,
+      });
+
+      console.log(mediaArtwork);
+
+      return res
+        .status(201)
+        .send(mediaArtwork);
+    }
+    catch (err) {
+      console.log(err);
+      switch (err.constructor) {
+        case UniqueConstraintError: {
+          const fields = err.fields;
+          return res
+            .status(400)
+            .send(responses.error(fields, errs.UNIQUE_CONSTRAINT_ERROR));
+        }
+        break;
+
+        case ValidationError: {
+          const errItem = err.errors[0];
+          return res
+            .status(400)
+            .send(responses.error(errItem, errs.VALIDATION_ERROR));
+        }
+        break;
+      }
       return res
         .status(500)
         .send(responses.error(req, errs.SERVER_ERROR));

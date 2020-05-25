@@ -15,6 +15,10 @@ router.get('/:id/metadata', mediaController.findMediaMetadata);
 router.patch('/:id/metadata', mediaController.updateMediaMetadata);
 router.put('/:id/metadata', mediaController.replaceMediaMetadata);
 
-//router.get('/:id/artwork', mediaController.findMediaArtwork);
+router.get('/:id/artwork', mediaController.findMediaArtwork);
+router.post('/:id/artwork', mediaController.createMediaArtwork);
+//router.delete('/:id/artwork', mediaController.deleteMediaArtwork);
+
+//router.put('/:id/artwork', mediaController.replaceMediaArtwork);
 
 module.exports = router;
