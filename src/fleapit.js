@@ -15,9 +15,10 @@ module.exports = async () => {
   const models = require('./models');
 
   // Routers
-  const usersRouter = require('./routes/users.js');
+  const artworkRouter = require('./routes/artwork.js');
   const collectionsRouter = require('./routes/collections.js');
   const mediaRouter = require('./routes/media.js');
+  const usersRouter = require('./routes/users.js');
 
   // Sync database with models
   await Promise.all(dbs.map(async (db) => {
@@ -27,9 +28,10 @@ module.exports = async () => {
   app.use(cors());
   app.use(express.json());
 
-  app.use('/users', usersRouter);
+  app.use('/artwork', artworkRouter);
   app.use('/collections', collectionsRouter);
   app.use('/media', mediaRouter);
+  app.use('/users', usersRouter);
 
   app.listen(port, () => {
     console.log(`Listening at http://localhost:${port}`);
