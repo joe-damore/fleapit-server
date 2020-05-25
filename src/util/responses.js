@@ -9,17 +9,17 @@ module.exports = {
    * The error property contains an error-specific code and a human readable
    * message.
    *
-   * @param {Object} req - Express request object.
-   * @param {Object} req - Object describing error code and message.
+   * @param {Object} data - Arbitrary data to pass to error message function.
+   * @param {Object} errorObject - Object describing error code and message.
    *
    * @return {Object} Object describing error to be sent in response.
    */
-  error: (req, errorObject) => {
+  error: (data, errorObject) => {
     const errorMessage = (() => {
       if (errorObject.message) {
         switch (typeof errorObject.message) {
           case `function`:
-            return errorObject.message(req);
+            return errorObject.message(data);
           break;
 
           default:
