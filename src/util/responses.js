@@ -1,5 +1,6 @@
 /**
- * @file Functions to generate consistently-structured HTTP JSON responses.
+ * @file Functions to generate common and consistently-structured HTTP JSON
+ * responses.
  */
 module.exports = {
 
