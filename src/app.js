@@ -23,6 +23,6 @@ const config = (() => {
 module.exports = {
   name: appInfo.name,
   version: appInfo.version,
-  dirs: dirs,
-  config: config,
+  dirs,
+  config,
 };
