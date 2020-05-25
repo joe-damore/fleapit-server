@@ -12,8 +12,9 @@ router.get('/:id/view', mediaController.findMedia);
 // router.get('/:id/download', mediaController.downloadMedia);
 
 router.get('/:id/metadata', mediaController.findMediaMetadata);
-router.patch('/:id/metadata', mediaController.updateMediaMetadata);
-router.put('/:id/metadata', mediaController.replaceMediaMetadata);
+router.post('/:id/metadata', mediaController.updateMediaMetadata);
+// router.delete('/:id/metadata', mediaController.deleteMediaMetadata);
+// TO DELETE router.post('/:id/metadata', mediaController.replaceMediaMetadata);
 
 router.get('/:id/artwork', mediaController.findMediaArtwork);
 router.post('/:id/artwork', mediaController.createMediaArtwork);
