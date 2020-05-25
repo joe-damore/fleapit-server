@@ -1,4 +1,5 @@
 // TODO Replace all mentions of 'MediaObjectController' with 'MediaController'
+const { ValidationError, UniqueConstraintError } = require('sequelize');
 
 const Media = require('../models/media.js');
 const MediaMetadata = require('../models/mediaMetadata.js');
@@ -11,16 +12,18 @@ const scrub = require('../util/scrub.js');
 const path = require('path');
 
 /**
- * Error codes to be used by mediaObjectController.
+ * Error codes to be used by mediaController.
  */
 const errs = {
   ...errorCodes,
 
+  // TODO Change to 'INVALID_MEDIA_ID'.
   INVALID_MEDIA_OBJECT_ID: {
     code: `INVALID_MEDIA_OBJECT_ID`,
     message: (req) => `ID '${req.params.id}' is non-numeric or otherwise invalid`,
   },
 
+  // TODO Change to 'MEDIA_NOT_FOUND'.
   MEDIA_OBJECT_NOT_FOUND: {
     code: `MEDIA_OBJECT_NOT_FOUND`,
     message: (req) => `Media object with ID '${req.params.id}' does not exist`,
@@ -41,15 +44,15 @@ const findById = async (id) => {
 /**
  * Gets the most appropriate name for the given media object instance.
  *
- * If available, the name will be pulled from a corresponding MediaCollection
- * instance. If that's not available, the mediaObject's name property is
+ * If available, the name will be pulled from a corresponding MediaMetadata
+ * instance. If that's not available, the media instance's name property is
  * returned instead. Finally, if that is not specified, the filename derived
  * from the mediaObject's URL is used.
  */
-const getMediaName = async (mediaObject) => {
+const getMediaName = async (media) => {
   let metadata = await MediaMetadata.findOne({
     where: {
-      mediaId: mediaObject.id,
+      mediaId: media.id,
       key: 'name',
     },
   });
@@ -58,10 +61,11 @@ const getMediaName = async (mediaObject) => {
     return metadata.value;
   }
 
-  if (mediaObject.name) {
-    return mediaObject.name;
+  if (media.name) {
+    return media.name;
   }
-  return path.basename(mediaObject.url);
+
+  return path.basename(media.url);
 };
 
 /**
@@ -73,8 +77,10 @@ const mediaController = {
    *
    */
   index: async (req, res) => {
-    const mediaObjects = await Media.findAll();
-    res.send(mediaObjects);
+    const media = await Media.findAll();
+    res.send(media.map((mediaItem) => {
+      return scrub(mediaItem, 'url');
+    }));
   },
 
   /**
@@ -82,13 +88,13 @@ const mediaController = {
    */
   createMedia: async (req, res) => {
     try {
-      let mediaObject = await Media.create({
+      let media = await Media.create({
         ...req.body,
       });
 
       return res
         .status(201)
-        .send(mediaObject);
+        .send(media);
     }
     catch (err) {
       console.log(err);
@@ -111,10 +117,10 @@ const mediaController = {
     }
 
     try {
-      let mediaObject = await findById(id);
-      if (mediaObject) {
-        const name = await getMediaName(mediaObject);
-        return res.sendFile(path.resolve(mediaObject.url), {
+      let media = await findById(id);
+      if (media) {
+        const name = await getMediaName(media);
+        return res.sendFile(path.resolve(media.url), {
           headers: {
             'Content-Disposition': `filename="${name}"`,
           },
@@ -126,6 +132,7 @@ const mediaController = {
         .send(responses.error(req, errs.MEDIA_OBJECT_NOT_FOUND));
     }
     catch (err) {
+      console.log(err);
       return res
         .status(500)
         .send(responses.error(req, errs.SERVER_ERROR));
@@ -145,12 +152,12 @@ const mediaController = {
     }
 
     try {
-      let mediaObject = await findById(id);
-      if (mediaObject) {
+      let media = await findById(id);
+      if (media) {
         return res
           .send(
             scrub(
-              mediaObject,
+              media,
               'url',
             )
           );
@@ -181,21 +188,21 @@ const mediaController = {
     }
 
     try {
-      let mediaObject = await findById(id);
-      if (!mediaObject) {
+      let media = await findById(id);
+      if (!media) {
         return res
           .status(404)
           .send(responses.error(req, errs.MEDIA_OBJECT_NOT_FOUND));
       }
 
-      let mediaObjectMetadata = await MediaMetadata.findAll({
+      let mediaMetadata = await MediaMetadata.findAll({
         where: {
           mediaId: id
         },
       });
 
       return res
-        .send(mediaObjectMetadata.reduce((acc, cur) => {
+        .send(mediaMetadata.reduce((acc, cur) => {
           const metadata = {};
           metadata[cur.key] = cur.value;
 
@@ -226,8 +233,8 @@ const mediaController = {
     }
 
     try {
-      let mediaObject = await findById(id);
-      if (!mediaObject) {
+      let media = await findById(id);
+      if (!media) {
         return res
           .status(404)
           .send(responses.error(req, errs.MEDIA_OBJECT_NOT_FOUND));
@@ -277,8 +284,8 @@ const mediaController = {
     }
 
     try {
-      let mediaObject = await findById(id);
-      if (!mediaObject) {
+      let media = await findById(id);
+      if (!media) {
         return res
           .status(404)
           .send(responses.error(req, errs.MEDIA_OBJECT_NOT_FOUND));
