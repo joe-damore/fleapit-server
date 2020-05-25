@@ -1,10 +1,14 @@
 const User = require('../models/user.js');
 
+const { ValidationError } = require('sequelize');
+
 const errorCodes = require('../util/errorCodes.js');
+const input = require('../util/input.js');
 const responses = require('../util/responses.js');
+const skeleton = require('../util/skeleton.js');
 
 /**
- * Enum-like structure to contain user-controller specific error codes.
+ * Enum to contain user-controller specific error codes.
  */
 const errs = {
   ...errorCodes,
@@ -39,7 +43,7 @@ const findById = async (id) => {
 const userController = {
 
   /**
-   *
+   * Returns an array of all users.
    */
   index: async (req, res) => {
     const users = await User.findAll();
@@ -47,7 +51,7 @@ const userController = {
   },
 
   /**
-   *
+   * Creates a user.
    */
   createUser: async (req, res) => {
     try {
@@ -60,7 +64,6 @@ const userController = {
         .send(user);
     }
     catch (err) {
-      console.log(err);
       return res
         .status(500)
         .send();
@@ -68,27 +71,25 @@ const userController = {
   },
 
   /**
+   * Finds and returns the user with the given ID.
    *
+   * If no user with the given ID exists, a 404 HTTP response is sent.
+   *
+   * @param {Object} req - Express request.
+   * @param {Object} res - Express response.
    */
-  findUserById: async (req, res) => {
-    const id = +req.params.id;
+  findUser: async (req, res) => {
+    const id = input.toNumber(req.params.id);
 
-    // Short-circuit 400 error if 'id' parameter is non-numeric.
-    if (isNaN(id)) {
+    if (!id) {
       return res
         .status(400)
         .send(responses.error(req, errs.INVALID_USER_ID));
     }
-    // Attempt to find the user with 'id' ID.
+
+    let user;
     try {
-      let user = await findById(id);
-      if (user) {
-        return res.send(user);
-      }
-      // Return 404 error if user is not found.
-      return res
-        .status(404)
-        .send(responses.error(req, errs.USER_NOT_FOUND));
+      user = await findById(id);
     }
     catch (err) {
       // Return 500 error if SQL error occurs.
@@ -96,16 +97,27 @@ const userController = {
         .status(500)
         .send(responses.error(req, errs.SERVER_ERROR));
     }
+
+    if (user) {
+      return res.send(user);
+    }
+    return res
+        .status(404)
+        .send(responses.error(req, errs.USER_NOT_FOUND));
   },
 
   /**
+   * Deletes the user with the given ID.
    *
+   * If no user with the given ID exists, a 404 HTTP response is sent.
+   *
+   * @param {Object} req - Express request.
+   * @param {Object} res - Express response.
    */
-  deleteUserById: async (req, res) => {
-    const id = +req.params.id;
+  deleteUser: async (req, res) => {
+    const id = input.toNumber(req.params.id);
 
-    // Short-circuit 400 error if 'id' parameter is non-numeric.
-    if (isNaN(id)) {
+    if (!id) {
       return res
         .status(400)
         .send(responses.error(req, errs.INVALID_USER_ID));
@@ -118,43 +130,68 @@ const userController = {
         return res
           .send(responses.ok());
       }
-      return res
-        .status(404)
-        .send(responses.error(req, errs.USER_NOT_FOUND));
     }
     catch (err) {
       return res
         .status(500)
         .send(responses.error(req, errs.SERVER_ERROR));
     }
+
+    return res
+      .status(404)
+      .send(responses.error(req, errs.USER_NOT_FOUND));
   },
 
   /**
+   * Replaces the user object with the given ID.
    *
+   * @param {Object} req - Express request.
+   * @param {Object} res - Express response.
    */
-  updateUserById: async (req, res) => {
-    const id = +req.params.id;
+  updateUser: async (req, res) => {
+    const id = input.toNumber(req.params.id);
 
-    // Short-circuit 400 error if 'id' parameter is non-numeric.
-    if (isNaN(id)) {
+    if (!id) {
       return res
         .status(400)
         .send(responses.error(req, errs.INVALID_USER_ID));
     }
 
     try {
-      let user = await findById(id);
-      if (user) {
-        await user.update(req.body);
+      const user = await findById(id);
+      if (!user) {
         return res
-          .send(responses.ok());
+          .status(404)
+          .send(responses.error(req, errs.USER_NOT_FOUND));
       }
+
+      await user.update({
+        ...skeleton(User),
+        ...req.body,
+      });
+
       return res
-        .status(404)
-        .send(responses.error(req, errs.USER_NOT_FOUND));
+        .send(responses.ok());
     }
     catch (err) {
-      console.log(err);
+      switch (err.constructor) {
+        case ValidationError:
+          const errItem = err.errors[0];
+          switch (errItem.type) {
+            case 'notNull Violation':
+              // Not-Null violation has occurred.
+              return res
+                .status(400)
+                .send(responses.error(errItem, errs.NOT_NULL_VIOLATION));
+              break;
+          }
+          // Unknown validation error has occurred.
+          return res
+            .status(400)
+            .send(responses.error(errItem, errs.VALIDATION_ERROR));
+          break;
+      }
+      // Unknown error has occurred.
       return res
         .status(500)
         .send(responses.error(req, errs.SERVER_ERROR));
