@@ -1,7 +1,7 @@
 const Sequelize = require('sequelize');
 const mediaDb = require('../db/mediaDb.js');
 
-const Media = require('./media.js');
+// const Media = require('./media.js');
 
 class MediaMetadata extends Sequelize.Model {};
 
@@ -11,7 +11,7 @@ MediaMetadata.init({
     allowNull: false,
     unique: 'object-key-composite',
     references: {
-      model: Media,
+      model: 'media',
       key: 'id',
     },
   },

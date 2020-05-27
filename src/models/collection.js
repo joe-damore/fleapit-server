@@ -12,7 +12,7 @@ Collection.init({
     type: Sequelize.INTEGER,
     allowNull: true,
     references: {
-      model: Collection,
+      model: 'collections',
       key: 'id',
     }
   },

@@ -1,7 +1,7 @@
 const Sequelize = require('sequelize');
 const mediaDb = require('../db/mediaDb.js');
 
-const Media = require('./media.js');
+// const Media = require('./media.js');
 
 class MediaArtwork extends Sequelize.Model {};
 
@@ -10,7 +10,7 @@ MediaArtwork.init({
     type: Sequelize.INTEGER,
     allowNull: false,
     references: {
-      model: Media,
+      model: 'media',
       key: 'id',
     },
   },
