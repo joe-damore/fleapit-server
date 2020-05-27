@@ -6,8 +6,11 @@ const mediaController = require('../controllers/mediaController.js');
 router.get('/', mediaController.index);
 router.post('/', mediaController.createMedia);
 
-router.get('/:id', mediaController.findMediaInfo);
-router.get('/:id/view', mediaController.findMedia);
+router.get('/:id', mediaController.findMedia);
+router.delete('/:id', mediaController.deleteMedia);
+// TODO Delete "ext" route
+// router.get('/:id/ext', mediaController.findMediaExtended);
+router.get('/:id/view', mediaController.viewMedia);
 // router.get('/:id/view', mediaController.viewMedia);
 // router.get('/:id/download', mediaController.downloadMedia);
 

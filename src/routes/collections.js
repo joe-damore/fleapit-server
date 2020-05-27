@@ -6,7 +6,8 @@ const collectionController = require('../controllers/collectionController.js');
 router.get('/', collectionController.index);
 router.post('/', collectionController.createCollection);
 
-router.get('/top', collectionController.indexTopLevel);
+// TODO Delete indexTop Level
+//router.get('/top', collectionController.indexTopLevel);
 
 router.get('/:id', collectionController.findCollectionById);
 router.get('/:id/items', collectionController.findCollectionItemsById);
