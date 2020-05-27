@@ -120,7 +120,7 @@ const mediaController = {
   /**
    *
    */
-  findMedia: async (req, res) => {
+  viewMedia: async (req, res) => {
     const id = +req.params.id;
 
     if (isNaN(id)) {
@@ -155,7 +155,8 @@ const mediaController = {
   /**
    *
    */
-  findMediaInfo: async (req, res) => {
+  // TODO Change to findMedia.
+  findMedia: async (req, res) => {
     const id = +req.params.id;
 
     if (isNaN(id)) {
