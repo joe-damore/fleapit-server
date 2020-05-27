@@ -143,7 +143,7 @@ const collectionController = {
 
       const retrievals = await Promise.all([
         (async () => {
-          return MediaObject.findAll({
+          return Media.findAll({
             where: {
               collection: id,
             },
@@ -151,7 +151,7 @@ const collectionController = {
         })(),
 
         (async () => {
-          return MediaCollection.findAll({
+          return Collection.findAll({
             where: {
               parentCollection: id,
             },
