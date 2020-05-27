@@ -1,6 +1,12 @@
 # Text editors
 *.sublime-workspace
 
+# Local development data
+art/
+dat/
+library/
+config.json
+
 # Logs
 logs
 *.log
