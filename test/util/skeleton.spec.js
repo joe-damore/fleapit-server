@@ -41,7 +41,51 @@ describe('./src/util/skeleton.js', function() {
 
     });
 
-    /// TODO Add test cases that accounts for options.
+    describe('When options are passed:', function() {
+
+      it(`should hide fields when 'includeHiddenFields' is false`, function() {
+        const options = {
+          includeHiddenFields: false,
+        };
+
+        const result = skeleton(ModelMock, options);
+
+        expect(result).to.not.have.property('id');
+        expect(result).to.not.have.property('createdAt');
+        expect(result).to.not.have.property('updatedAt');
+      });
+
+      it(`should not hide fields when 'includeHiddenFields' is true`, function() {
+        const options = {
+          includeHiddenFields: true,
+        };
+
+        const result = skeleton(ModelMock, options);
+
+        expect(result).to.have.property('id');
+        expect(result).to.have.property('createdAt');
+        expect(result).to.have.property('updatedAt');
+      });
+
+      it(`should only hide given fields when 'hiddenFields' is specified`, function() {
+        const options = {
+          includeHiddenFields: false,
+          hiddenFields: [
+            'propertyA',
+            'propertyB',
+          ],
+        };
+
+        const result = skeleton(ModelMock, options);
+
+        expect(result).to.not.have.property('propertyA');
+        expect(result).to.not.have.property('propertyB');
+        expect(result).to.have.property('id');
+        expect(result).to.have.property('createdAt');
+        expect(result).to.have.property('updatedAt');
+      });
+
+    });
 
   });
 
