@@ -77,7 +77,20 @@ const mediaController = {
    *
    */
   index: async (req, res) => {
-    const media = await Media.findAll();
+    const limit = req.query.limit;
+    const offset = req.query.offset;
+
+    // Sort media items by ID (ascending).
+    // Optionally include LIMIT and OFFSET values.
+    const query = {
+      order: [
+        ['id', 'ASC'],
+      ],
+      limit,
+      offset,
+    };
+
+    const media = await Media.findAll(query);
     res.send(media.map((mediaItem) => {
       return scrub(mediaItem, 'url');
     }));
