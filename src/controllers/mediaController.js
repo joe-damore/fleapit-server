@@ -6,6 +6,7 @@ const MediaMetadata = require('../models/mediaMetadata.js');
 const MediaArtwork = require('../models/mediaArtwork.js');
 
 const errorCodes = require('../util/errorCodes.js');
+const input = require('../util/input.js');
 const responses = require('../util/responses.js');
 const scrub = require('../util/scrub.js');
 
@@ -180,6 +181,79 @@ const mediaController = {
       return res
         .status(404)
         .send(responses.error(req, errs.MEDIA_OBJECT_NOT_FOUND));
+    }
+    catch (err) {
+      console.log(err);
+      return res
+        .status(500)
+        .send(responses.error(req, errs.SERVER_ERROR));
+    }
+  },
+
+  deleteMedia: async (req, res) => {
+    const id = input.toNumber(req.params.id);
+
+    if (!id) {
+      return res
+        .status(400)
+        .send(responses.error(req, errs.INVALID_MEDIA_OBJECT_ID));
+    }
+
+    try {
+      let media = await findById(id);
+      if (media) {
+        await media.destroy();
+        return res.send(responses.ok());
+      }
+
+      return res
+        .status(404)
+        .send(responses.error(req, errs.MEDIA_OBJECT_NOT_FOUND));
+    }
+    catch (err) {
+      console.log(err);
+      return res
+        .status(500)
+        .send(responses.error(req, errs.SERVER_ERROR));
+    }
+  },
+
+  /**
+   *
+   */
+  findMediaExtended: async (req, res) => {
+    const id = input.toNumber(req.params.id);
+
+    if (!id) {
+      return res
+        .status(400)
+        .send(responses.error(req, errs.INVALID_MEDIA_OBJECT_ID));
+    }
+
+    try {
+      let media = await Media.findOne({
+          where: {
+            id,
+          },
+          include: [
+            {
+              model: MediaArtwork,
+              as: 'artwork',
+            },
+            {
+              model: MediaMetadata,
+              as: 'metadata',
+            },
+          ],
+        });
+      if (!media) {
+        return res
+          .status(404)
+          .send(responses.error(req, errs.MEDIA_OBJECT_NOT_FOUND));
+      }
+
+      return res
+        .send(scrub(media, 'url'));
     }
     catch (err) {
       console.log(err);
