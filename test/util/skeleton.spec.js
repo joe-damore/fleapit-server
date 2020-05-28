@@ -15,7 +15,7 @@ describe('./src/util/skeleton.js', function() {
       },
     };
 
-    describe('When no options are passed:', function() {
+    describe('When options are not passed:', function() {
 
       it(`should exclude 'id', 'createdAt', and 'updatedAt' fields in output`, function() {
         const result = skeleton(ModelMock);
