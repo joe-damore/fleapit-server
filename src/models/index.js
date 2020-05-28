@@ -6,6 +6,8 @@ const user = require('./user.js');
 
 module.exports = {
   collection,
+  collectionCollection,
+  collectionMedia,
   media,
   mediaArtwork,
   mediaMetadata,
