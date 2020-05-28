@@ -5,6 +5,9 @@
  * work with HTTP request data, the inputs are accepted as strings only.
  */
 
+/**
+ * Object containing input utility functions.
+ */
 const input = {
 
   /**
