@@ -1,7 +1,8 @@
 const Sequelize = require('sequelize');
 const mediaDb = require('../db/mediaDb.js');
 
-const Collection = require('./collection.js');
+const MediaArtwork = require('../models/mediaArtwork.js');
+const MediaMetadata = require('../models/mediaMetadata.js');
 
 class Media extends Sequelize.Model {};
 
@@ -19,17 +20,14 @@ Media.init({
     type: Sequelize.STRING,
     allowNull: false,
   },
-  collection: {
-    type: Sequelize.INTEGER,
-    allowNull: false,
-    references: {
-      model: Collection,
-      key: 'id',
-    },
-  }
 }, {
   sequelize: mediaDb,
   modelName: 'media',
 });
 
-module.exports = Media;
+const associations = (models) => {
+  Media.hasMany(models.MediaArtwork, {foreignKey: 'mediaId', as: 'artwork', onDelete: 'cascade'});
+  Media.hasMany(models.MediaMetadata, {foreignKey: 'mediaId', as: 'metadata', onDelete: 'cascade'});
+};
+
+module.exports = { model: Media, associations }

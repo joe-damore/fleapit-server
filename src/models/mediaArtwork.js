@@ -41,4 +41,4 @@ MediaArtwork.init({
   modelName: 'mediaArtwork',
 });
 
-module.exports = MediaArtwork;
+module.exports = { model: MediaArtwork };

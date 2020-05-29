@@ -32,7 +32,11 @@ CollectionCollection.init({
   modelName: 'collectionCollection',
 });
 
-CollectionCollection.hasOne('collections', { foreignKey: 'id', as: 'parentCollection' });
-CollectionCollection.hasOne('collections', { foreignKey: 'id', as: 'childCollection' });
+// const associations = (models) => {
+//   CollectionCollection.hasOne(models.Collections, { foreignKey: 'id', as: 'parentCollection' });
+//   CollectionCollection.hasOne(models.Collections, { foreignKey: 'id', as: 'childCollection' });
+// }
 
-module.exports = CollectionCollection;
+module.exports = {
+  model: CollectionCollection,
+};

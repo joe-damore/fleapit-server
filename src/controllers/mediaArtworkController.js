@@ -1,4 +1,4 @@
-const MediaArtwork = require('../models/mediaArtwork.js');
+const { MediaArtwork } = require('../models');
 
 const errorCodes = require('../util/errorCodes.js');
 const input = require('../util/input.js');

@@ -1,8 +1,7 @@
 // TODO Replace all mentions of "MediaCollection" with "Collection".
 
 // Models
-const Collection = require('../models/collection.js');
-const Media = require('../models/media.js');
+const { Collection, Media } = require('../models');
 
 // Utilities
 const errorCodes = require('../util/errorCodes.js');

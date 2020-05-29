@@ -29,4 +29,4 @@ MediaMetadata.init({
   modelName: 'mediaMetadata',
 });
 
-module.exports = MediaMetadata;
+module.exports = { model: MediaMetadata };

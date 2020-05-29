@@ -25,7 +25,12 @@ CollectionMedia.init({
   modelName: 'collectionMedia',
 });
 
-CollectionMedia.hasOne('collections', { foreignKey: 'id', as: 'parentCollection' });
-CollectionMedia.hasOne('media', { foreignKey: 'id', as: 'childCollection' });
+// const associations = (models) => {
+//   CollectionMedia.hasOne(models.collections, { foreignKey: 'id', as: 'parentCollection' });
+//   CollectionMedia.hasOne(models.media, { foreignKey: 'id', as: 'childCollection' });
+// };
 
-module.exports = CollectionMedia;
+module.exports = {
+  model: CollectionMedia,
+//  associations,
+};

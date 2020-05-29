@@ -1,9 +1,7 @@
 // TODO Replace all mentions of 'MediaObjectController' with 'MediaController'
 const { ValidationError, UniqueConstraintError } = require('sequelize');
 
-const Media = require('../models/media.js');
-const MediaMetadata = require('../models/mediaMetadata.js');
-const MediaArtwork = require('../models/mediaArtwork.js');
+const { Media, MediaMetadata, MediaArtwork } = require('../models');
 
 const errorCodes = require('../util/errorCodes.js');
 const input = require('../util/input.js');
