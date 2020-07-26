@@ -3,6 +3,7 @@ const { User } = require('../models');
 const { ValidationError } = require('sequelize');
 
 const errorCodes = require('../util/errorCodes.js');
+const errorDigest = require('../util/errorDigest.js');
 const input = require('../util/input.js');
 const responses = require('../util/responses.js');
 const skeleton = require('../util/skeleton.js');

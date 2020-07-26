@@ -74,6 +74,9 @@ const mediaArtworkController = {
       .send(responses.error(req, errs.ARTWORK_NOT_FOUND));
   },
 
+  /**
+   *
+   */
   viewArtwork: async (req, res) => {
     const id = input.toNumber(req.params.id);
 

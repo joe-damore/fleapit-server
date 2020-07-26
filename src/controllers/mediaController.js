@@ -4,7 +4,9 @@ const { ValidationError, UniqueConstraintError } = require('sequelize');
 const { Media, MediaMetadata, MediaArtwork } = require('../models');
 
 const errorCodes = require('../util/errorCodes.js');
+const errorDigest = require('../util/errorDigest.js');
 const input = require('../util/input.js');
+const keyValue = require('../util/keyValue.js');
 const responses = require('../util/responses.js');
 const scrub = require('../util/scrub.js');
 
@@ -27,13 +29,24 @@ const errs = {
     code: `MEDIA_OBJECT_NOT_FOUND`,
     message: (req) => `Media object with ID '${req.params.id}' does not exist`,
   },
+
+  MEDIA_METADATA_NOT_FOUND: {
+    code: `MEDIA_METADATA_NOT_FOUND`,
+    message: (req) => `Media metadata for object with ID '${req.params.id}'' does not exist.`,
+  },
 };
 
 /**
+ * Finds the media object with the given ID.
  *
+ * @param {number} id - Media object ID.
+ * @param {Object=} options - Sequelize query options.
+ *
+ * @returns {Object} Promise for Sequelize query.
  */
-const findById = async (id) => {
+const findById = async (id, options = {}) => {
   return Media.findOne({
+    ...options,
     where: {
       id,
     },
@@ -52,12 +65,11 @@ const getMediaName = async (media) => {
   let metadata = await MediaMetadata.findOne({
     where: {
       mediaId: media.id,
-      key: 'name',
     },
   });
 
-  if (metadata) {
-    return metadata.value;
+  if (metadata && metadata.get()?.metadata?.name) {
+    return metadata.get().metadata.name;
   }
 
   if (media.name) {
@@ -67,36 +79,111 @@ const getMediaName = async (media) => {
   return path.basename(media.url);
 };
 
+// Joined data to be included when viewing "extended" media info.
+const extendedInfoJoin = [
+  { model: MediaArtwork, as: 'artwork' },
+  { model: MediaMetadata, as: 'metadata' },
+];
+
 /**
- *
+ * Controller to handle media-related requests.
  */
 const mediaController = {
 
   /**
+   * List all media objects.
    *
+   * Query parameters:
+   * - limit (Optional)
+   *     Maximum number of results to return. When not specified, no limit is
+   *     used.
+   * - offset (Optional)
+   *     Offset of rows to be included in result set. No offset is applied by
+   *     default.
+   * - ext (Optional)
+   *     When present, extended media info (metadata, artwork) is included in
+   *     results.
+   *
+   * @param {Object} req - Express request.
+   * @param {Object} res - Express response.
    */
   index: async (req, res) => {
     const limit = req.query.limit;
     const offset = req.query.offset;
+    const ext = req.query.ext;
 
     // Sort media items by ID (ascending).
     // Optionally include LIMIT and OFFSET values.
+    // Optionally include artwork and metadata info.
     const query = {
-      order: [
-        ['id', 'ASC'],
-      ],
+      order: [['id', 'ASC']],
+      include: (ext !== undefined ? extendedInfoJoin : undefined),
       limit,
       offset,
     };
 
-    const media = await Media.findAll(query);
-    res.send(media.map((mediaItem) => {
-      return scrub(mediaItem, 'url');
-    }));
+    try {
+      // Get model instance from each result, flatten metadata into object,
+      // and scrub 'url' property.
+      const media = (await Media.findAll(query)).map((mediaItem) => {
+        const output = mediaItem.get();
+        if (!output.metadata) {
+          output.metadata = {};
+        }
+        return scrub(output, 'url');
+      });
+
+      res.send(media);
+    }
+    catch (err) {
+      errorDigest(err, req, res).send();
+    }
   },
 
   /**
+   * Finds a single given media object by ID.
    *
+   * Query parameters:
+   * - ext (Optional)
+   *     When present, extended media info (metadata, artwork) is included in
+   *     result.
+   *
+   * @param {Object} req - Express request.
+   * @param {Object} res - Express response.
+   */
+  findMedia: async (req, res) => {
+    const id = input.toNumber(req.params.id);
+    const queryOptions = {
+      include: (req.query.ext === undefined ? undefined : extendedInfoJoin),
+    };
+
+    if (!id) {
+      return res
+        .status(400)
+        .send(responses.error(req, errs.INVALID_MEDIA_OBJECT_ID));
+    }
+
+    try {
+      const media = await findById(id, queryOptions);
+
+      if (media) {
+        return res.send(scrub(media.get(), 'url'));
+      }
+
+      return res
+        .status(404)
+        .send(responses.error(req, errs.MEDIA_OBJECT_NOT_FOUND));
+    }
+    catch (err) {
+      errorDigest(err, req, res).send();
+    }
+  },
+
+  /**
+   * Creates a media object.
+   *
+   * @param {Object} req - Express request.
+   * @param {Object} res - Express response.
    */
   createMedia: async (req, res) => {
     try {
@@ -109,20 +196,20 @@ const mediaController = {
         .send(media);
     }
     catch (err) {
-      console.log(err);
-      return res
-        .status(500)
-        .send(responses.error(req, errs.SERVER_ERROR));
+      errorDigest(err, req, res).send();
     }
   },
 
   /**
+   * Finds a media object by ID and serves the media file that it refers to.
    *
+   * @param {Object} req - Express request.
+   * @param {Object} res - Express response.
    */
   viewMedia: async (req, res) => {
-    const id = +req.params.id;
+    const id = input.toNumber(req.params.id);
 
-    if (isNaN(id)) {
+    if (!id) {
       return res
         .status(400)
         .send(responses.error(req, errs.INVALID_MEDIA_OBJECT_ID));
@@ -144,21 +231,20 @@ const mediaController = {
         .send(responses.error(req, errs.MEDIA_OBJECT_NOT_FOUND));
     }
     catch (err) {
-      console.log(err);
-      return res
-        .status(500)
-        .send(responses.error(req, errs.SERVER_ERROR));
+      errorDigest(err, req, res).send();
     }
   },
 
   /**
+   * Finds a media object by ID and serves the media file that it refers to for download.
    *
+   * @param {Object} req - Express request.
+   * @param {Object} res - Express response.
    */
-  // TODO Change to findMedia.
-  findMedia: async (req, res) => {
-    const id = +req.params.id;
+  downloadMedia: async (req, res) => {
+    const id = input.toNumber(req.params.id);
 
-    if (isNaN(id)) {
+    if (!id) {
       return res
         .status(400)
         .send(responses.error(req, errs.INVALID_MEDIA_OBJECT_ID));
@@ -167,13 +253,8 @@ const mediaController = {
     try {
       let media = await findById(id);
       if (media) {
-        return res
-          .send(
-            scrub(
-              media,
-              'url',
-            )
-          );
+        const name = await getMediaName(media);
+        return res.download(path.resolve(media.url));
       }
 
       return res
@@ -181,13 +262,16 @@ const mediaController = {
         .send(responses.error(req, errs.MEDIA_OBJECT_NOT_FOUND));
     }
     catch (err) {
-      console.log(err);
-      return res
-        .status(500)
-        .send(responses.error(req, errs.SERVER_ERROR));
+      errorDigest(err, req, res).send();
     }
   },
 
+  /**
+   * Deletes the media object with the given ID.
+   *
+   * @param {Object} req - Express request.
+   * @param {Object} res - Express response.
+   */
   deleteMedia: async (req, res) => {
     const id = input.toNumber(req.params.id);
 
@@ -209,17 +293,14 @@ const mediaController = {
         .send(responses.error(req, errs.MEDIA_OBJECT_NOT_FOUND));
     }
     catch (err) {
-      console.log(err);
-      return res
-        .status(500)
-        .send(responses.error(req, errs.SERVER_ERROR));
+      errorDigest(err, req, res).send();
     }
   },
 
   /**
    *
    */
-  findMediaExtended: async (req, res) => {
+  findMediaMetadata: async (req, res) => {
     const id = input.toNumber(req.params.id);
 
     if (!id) {
@@ -229,51 +310,6 @@ const mediaController = {
     }
 
     try {
-      let media = await Media.findOne({
-          where: {
-            id,
-          },
-          include: [
-            {
-              model: MediaArtwork,
-              as: 'artwork',
-            },
-            {
-              model: MediaMetadata,
-              as: 'metadata',
-            },
-          ],
-        });
-      if (!media) {
-        return res
-          .status(404)
-          .send(responses.error(req, errs.MEDIA_OBJECT_NOT_FOUND));
-      }
-
-      return res
-        .send(scrub(media, 'url'));
-    }
-    catch (err) {
-      console.log(err);
-      return res
-        .status(500)
-        .send(responses.error(req, errs.SERVER_ERROR));
-    }
-  },
-
-  /**
-   *
-   */
-  findMediaMetadata: async (req, res) => {
-    const id = +req.params.id;
-
-    if (isNaN(id)) {
-      return res
-        .status(400)
-        .send(responses.error(req, errs.INVALID_MEDIA_OBJECT_ID));
-    }
-
-    try {
       let media = await findById(id);
       if (!media) {
         return res
@@ -281,89 +317,34 @@ const mediaController = {
           .send(responses.error(req, errs.MEDIA_OBJECT_NOT_FOUND));
       }
 
-      let mediaMetadata = await MediaMetadata.findAll({
+      const metadataData = await MediaMetadata.findOne({
         where: {
           mediaId: id
         },
       });
 
-      return res
-        .send(mediaMetadata.reduce((acc, cur) => {
-          const metadata = {};
-          metadata[cur.key] = cur.value;
-
-          return {
-            ...acc,
-            ...metadata
-          };
-        }, {}));
-    }
-    catch (err) {
-      console.log(err);
-      return res
-        .status(500)
-        .send(responses.error(req, errs.SERVER_ERROR));
-    }
-  },
-
-  /**
-   *
-   */
-  updateMediaMetadata: async (req, res) => {
-    const id = +req.params.id;
-
-    if (isNaN(id)) {
-      return res
-        .status(400)
-        .send(responses.error(req, errs.INVALID_MEDIA_OBJECT_ID));
-    }
-
-    try {
-      let media = await findById(id);
-      if (!media) {
-        return res
-          .status(404)
-          .send(responses.error(req, errs.MEDIA_OBJECT_NOT_FOUND));
-      }
-
-      const metadataPromises = Object.keys(req.body).map((key) => {
-        const value = req.body[key];
-
-        if (value === null || value === undefined) {
-          // Remove metadata entry if value is null or undefined.
-          return MediaMetadata.destroy({
-            where: {
-              mediaId: id,
-              key,
-            },
-          });
+      const metadataOutput = (() => {
+        if (metadataData) {
+          return metadataData.get().metadata;
         }
-        // Insert or update entry if value is specified.
-        return MediaMetadata.upsert({
-          mediaId: id,
-          key,
-          value,
-        });
-      });
+        return {};
+      })();
 
-      await Promise.all(metadataPromises);
-      return res.send(responses.ok());
+      return res.send(metadataOutput);
     }
     catch (err) {
       console.log(err);
-      return res
-        .status(500)
-        .send(responses.error(req, errs.SERVER_ERROR));
+      errorDigest(err, req, res).send();
     }
   },
 
   /**
    *
    */
-  replaceMediaMetadata: async (req, res) => {
-    const id = +req.params.id;
+  upsertMediaMetadata: async (req, res) => {
+    const id = input.toNumber(req.params.id);
 
-    if (isNaN(id)) {
+    if (!id) {
       return res
         .status(400)
         .send(responses.error(req, errs.INVALID_MEDIA_OBJECT_ID));
@@ -377,34 +358,77 @@ const mediaController = {
           .send(responses.error(req, errs.MEDIA_OBJECT_NOT_FOUND));
       }
 
-      await MediaMetadata.destroy({
+      const recordsBefore = await MediaMetadata.count({
         where: {
           mediaId: id,
-        }
+        },
       });
 
-      const metadataPromises = Object.keys(req.body).map((key) => {
-        const value = req.body[key];
+      await MediaMetadata.upsert({
+        mediaId: id,
+        metadata: req.body,
+      });
 
-        // Short-circuit if no value is provided.
-        if (value === null || value === undefined) {
-          return;
-        }
-        return MediaMetadata.create({
+      const recordsAfter = await MediaMetadata.count({
+        where: {
           mediaId: id,
-          key,
-          value
-        });
+        },
       });
 
-      await Promise.all(metadataPromises);
+      // Respond with 200 status by default, or 201 if new record was created.
+      let status = 200;
+      if (recordsAfter > recordsBefore) {
+        status = 201;
+      }
+
+      return res.status(status).send(responses.ok());
+    }
+    catch (err) {
+      errorDigest(err, req, res).send();
+    }
+  },
+
+  /**
+   *
+   */
+  patchMediaMetadata: async (req, res) => {
+    const id = input.toNumber(req.params.id);
+
+    if (!id) {
+      return res
+        .status(400)
+        .send(responses.error(req, errs.INVALID_MEDIA_OBJECT_ID));
+    }
+
+    try {
+      let media = await findById(id);
+      if (!media) {
+        return res
+          .status(404)
+          .send(responses.error(req, errs.MEDIA_OBJECT_NOT_FOUND));
+      }
+
+      const metadataResult = await MediaMetadata.findOne({
+        where: {
+          mediaId: id,
+        },
+      });
+
+      const metadata = metadataResult?.get()?.metadata || {};
+
+      await MediaMetadata.upsert({
+        mediaId: id,
+        metadata: {
+          ...metadata,
+          ...req.body,
+        },
+      });
+
       return res.send(responses.ok());
     }
     catch (err) {
       console.log(err);
-      return res
-        .status(500)
-        .send(responses.error(req, errs.SERVER_ERROR));
+      errorDigest(err, req, res).send();
     }
   },
 
@@ -440,10 +464,7 @@ const mediaController = {
         }));
     }
     catch (err) {
-      console.log(err);
-      return res
-        .status(500)
-        .send(responses.error(req, errs.SERVER_ERROR));
+      errorDigest(err, req, res).send();
     }
   },
 
@@ -472,34 +493,12 @@ const mediaController = {
         ...req.body,
       });
 
-      console.log(mediaArtwork);
-
       return res
         .status(201)
         .send(mediaArtwork);
     }
     catch (err) {
-      console.log(err);
-      switch (err.constructor) {
-        case UniqueConstraintError: {
-          const fields = err.fields;
-          return res
-            .status(400)
-            .send(responses.error(fields, errs.UNIQUE_CONSTRAINT_ERROR));
-        }
-        break;
-
-        case ValidationError: {
-          const errItem = err.errors[0];
-          return res
-            .status(400)
-            .send(responses.error(errItem, errs.VALIDATION_ERROR));
-        }
-        break;
-      }
-      return res
-        .status(500)
-        .send(responses.error(req, errs.SERVER_ERROR));
+      errorDigest(err, req, res).send();
     }
   },
 
