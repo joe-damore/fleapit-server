@@ -1,19 +1,19 @@
-const collection = require('./collection.js');
-const collectionCollection = require('./collectionCollection.js');
-const collectionMedia = require('./collectionMedia.js');
-const media = require('./media.js');
-const mediaArtwork = require('./mediaArtwork.js');
-const mediaMetadata = require('./mediaMetadata.js');
-const user = require('./user.js');
+const Collection = require('./collection.js');
+const CollectionCollection = require('./collectionCollection.js');
+const CollectionMedia = require('./collectionMedia.js');
+const Media = require('./media.js');
+const MediaArtwork = require('./mediaArtwork.js');
+const MediaMetadata = require('./mediaMetadata.js');
+const User = require('./user.js');
 
 const models = {
-  collection,
-  collectionCollection,
-  collectionMedia,
-  media,
-  mediaArtwork,
-  mediaMetadata,
-  user,
+  Collection,
+  CollectionCollection,
+  CollectionMedia,
+  Media,
+  MediaArtwork,
+  MediaMetadata,
+  User,
 };
 
 /**
@@ -21,7 +21,7 @@ const models = {
  */
 Object.keys(models).forEach((key) => {
   const model = models[key];
-  const association = model.association;
+  const association = model.associations;
   const sequelize = model.model.sequelize;
 
   if (association && typeof association === 'function') {
@@ -33,14 +33,11 @@ Object.keys(models).forEach((key) => {
  * Re-export models only.
  */
 const exportedModels = Object.keys(models).reduce((acc, cur) => {
-  const model = models[cur];
+  const model = models[cur].model;
   const output = acc;
 
   output[cur] = model;
   return output;
 }, {});
 
-/**
- * Re-export models only.
- */
 module.exports = exportedModels;

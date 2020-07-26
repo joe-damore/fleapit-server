@@ -14,8 +14,8 @@ Collection.init({
 });
 
 const associations = (models) => {
-  Collection.hasMany(models.CollectionCollection, {foreignKey: 'childCollectionId', as: 'collections'});
-  Collection.hasMany(models.CollectionMedia, {foreignKey: 'childMediaId', as: 'media'});
+  Collection.hasMany(models.collectionCollection, {foreignKey: 'childCollectionId', as: 'collections'});
+  Collection.hasMany(models.collectionMedia, {foreignKey: 'childMediaId', as: 'media'});
 };
 
 module.exports = {

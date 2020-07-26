@@ -26,8 +26,8 @@ Media.init({
 });
 
 const associations = (models) => {
-  Media.hasMany(models.MediaArtwork, {foreignKey: 'mediaId', as: 'artwork', onDelete: 'cascade'});
-  Media.hasMany(models.MediaMetadata, {foreignKey: 'mediaId', as: 'metadata', onDelete: 'cascade'});
+  Media.hasMany(models.mediaArtwork, {foreignKey: 'mediaId', as: 'artwork', onDelete: 'cascade'});
+  Media.hasOne(models.mediaMetadata, {foreignKey: 'mediaId', as: 'metadata', onDelete: 'cascade'});
 };
 
 module.exports = { model: Media, associations }
